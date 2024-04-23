@@ -1,0 +1,55 @@
+from langchain_core.prompts import PromptTemplate
+
+from constant import OPENAI_KEY
+
+# load excel files
+from langchain_community.document_loaders import UnstructuredExcelLoader
+loader = UnstructuredExcelLoader('datas/RAG_data_test.xlsx')
+docs = loader.load()
+
+# Split text documents
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+text_splitter = RecursiveCharacterTextSplitter(
+    chunk_size=500,
+    chunk_overlap=30,
+)
+documents = text_splitter.split_documents(docs)
+
+
+
+# create embeddings
+from langchain_openai import OpenAIEmbeddings
+openai = OpenAIEmbeddings(openai_api_key=OPENAI_KEY)
+
+from langchain_pinecone import PineconeVectorStore
+from constant import PINECONE_INDEX_NAME
+vectorstore = PineconeVectorStore.from_documents(documents, index_name=PINECONE_INDEX_NAME, embedding=openai)
+
+# memory
+from langchain.memory import ConversationBufferMemory
+
+memory = ConversationBufferMemory(
+    memory_key="chat_history", return_messages=True, output_key="answer"
+)
+
+# set query
+from langchain_openai import ChatOpenAI  
+
+llm = ChatOpenAI(  
+    openai_api_key=OPENAI_KEY,  
+    model_name='gpt-3.5-turbo',  
+    temperature=0.0  
+) 
+
+from langchain.chains import RetrievalQA  
+qa = RetrievalQA.from_chain_type(  
+    llm=llm,  
+    chain_type="stuff",  
+    retriever=vectorstore.as_retriever()  
+)
+
+# query as-self
+query = "Liste moi les produits de marque KitchenAid."
+
+# return response
+print(qa.invoke(query))
