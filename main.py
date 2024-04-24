@@ -1,10 +1,9 @@
-from langchain_core.prompts import PromptTemplate
 
 from constant import OPENAI_KEY
 
 # load excel files
-from langchain_community.document_loaders import UnstructuredExcelLoader
-loader = UnstructuredExcelLoader('datas/RAG_data_test.xlsx')
+from langchain_community.document_loaders.csv_loader import UnstructuredCSVLoader
+loader = UnstructuredCSVLoader(file_path='datas/RAG_data_test.csv')
 docs = loader.load()
 
 # Split text documents
@@ -49,7 +48,14 @@ qa = RetrievalQA.from_chain_type(
 )
 
 # query as-self
-query = "Liste moi les produits de marque KitchenAid."
+query = input("Votre question : ")
+
 
 # return response
-print(qa.invoke(query))
+response = qa.invoke(query)
+
+print("""
+   Vous: {}
+      
+   Chatbot: {}
+""".format(response["query"], response["result"]))
