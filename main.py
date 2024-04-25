@@ -47,15 +47,15 @@ qa = RetrievalQA.from_chain_type(
     retriever=vectorstore.as_retriever()  
 )
 
-# query as-self
-query = input("Votre question : ")
+querying_after_response = True
 
+while querying_after_response:
+    # query as-self
+    query = input("Vous : ")
+    print('\n')
 
-# return response
-response = qa.invoke(query)
+    # return response
+    response = qa.invoke(query)
 
-print("""
-   Vous: {}
-      
-   Chatbot: {}
-""".format(response["query"], response["result"]))
+    print("""Chatbot: {}
+    """.format(response["result"]))
